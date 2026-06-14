@@ -59,17 +59,15 @@ export default function CreateBounty() {
       const deadlineTimestamp = BigInt(
         Math.floor(formData.deadline.getTime() / 1000)
       );
-      const bountyAmountBigInt = BigInt(formData.bountyAmount).toString();
-      const maxClaimsBigInt = BigInt(formData.maxClaims);
 
       await handleCreateIssue({
         githubProjectId: formData.title,
-        bountyAmount: bountyAmountBigInt,
+        bountyAmount: formData.bountyAmount,
         projectName: formData.title,
         description: formData.description,
         repoLink: formData.repoLink,
         deadline: deadlineTimestamp,
-        maxClaims: maxClaimsBigInt,
+        maxClaims: BigInt(formData.maxClaims),
       });
 
       setFormData({

@@ -8,13 +8,13 @@ import { formatUnits } from "viem";
 
 export default function WalletConnect() {
   const { address } = useWallet();
-  const { MantleUSDCBalance } = useBalance(address || "");
+  const { tokenBalance } = useBalance(address || "");
 
   const formattedBalance = () => {
-    if (!MantleUSDCBalance) return "0";
+    if (!tokenBalance) return "0";
 
     try {
-      const balanceBigInt = BigInt(MantleUSDCBalance.toString());
+      const balanceBigInt = BigInt(tokenBalance.toString());
       return parseInt(formatUnits(balanceBigInt, 18));
     } catch (error) {
       console.error("Error formatting balance:", error);

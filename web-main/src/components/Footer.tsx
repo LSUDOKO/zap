@@ -33,7 +33,7 @@ export default function Footer() {
                   zkPull &copy; {new Date().getFullYear()}
                 </p>
                 <p className="text-sm text-gray-600">
-                  Powered by zkTLS technology on Mantle blockchain.
+                  Powered by zkTLS technology on Ethereum Sepolia.
                 </p>
               </div>
             </div>

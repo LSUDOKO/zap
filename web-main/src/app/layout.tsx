@@ -13,7 +13,7 @@ const poppins = Manrope({
 
 export const metadata: Metadata = {
   title: "zkPull - Decentralized Bounty Platform",
-  description: "Open Source Contributions Rewarded with zkTLS on Mantle. Powered by MetaMask Smart Accounts.",
+  description: "Open Source Contributions Rewarded with zkTLS on Ethereum Sepolia. Powered by MetaMask Smart Accounts.",
 };
 
 export default function RootLayout({

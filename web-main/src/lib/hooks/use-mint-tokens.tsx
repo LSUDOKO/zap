@@ -2,7 +2,7 @@
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { parseEther } from "viem";
 import { toast } from "sonner";
-import { MANTLE_USD_ADDRESS, MANTLE_USD_ABI } from "@/config/const";
+import { USD_TOKEN_ADDRESS, USD_TOKEN_ABI } from "@/config/const";
 import React from "react";
 
 export function useMintTokens() {
@@ -21,8 +21,8 @@ export function useMintTokens() {
     try {
       const amountWei = parseEther(amount);
       mint({
-        address: MANTLE_USD_ADDRESS,
-        abi: MANTLE_USD_ABI,
+        address: USD_TOKEN_ADDRESS,
+        abi: USD_TOKEN_ABI,
         functionName: "mint",
         args: [to, amountWei],
       });

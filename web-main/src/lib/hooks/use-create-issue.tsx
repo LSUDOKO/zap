@@ -1,8 +1,8 @@
 import {
   ISSUE_ADDRESS,
   ISSUE_ABI,
-  MANTLE_USD_ADDRESS,
-  MANTLE_USD_ABI,
+  USD_TOKEN_ADDRESS,
+  USD_TOKEN_ABI,
 } from "@/config/const";
 import { CreateIssueParams } from "@/utils/types";
 import { toast } from "sonner";
@@ -10,7 +10,7 @@ import { useCallback, useState } from "react";
 import { parseEther, encodeFunctionData } from "viem";
 import { useSmartAccount } from "@/lib/MetaMaskSmartAccountProvider";
 
-const MANTLE_SEPOLIA_EXPLORER = "https://sepolia.mantlescan.xyz/tx/";
+const SEPOLIA_EXPLORER = "https://sepolia.etherscan.io/tx/";
 
 export interface CreateIssueState {
   isPending: boolean;
@@ -57,17 +57,16 @@ export const useCreateIssue = () => {
         id: "create-issue",
       });
 
-      // Send a batched UserOperation: approve mUSD + createIssue
-      // The bundler handles counterfactual deployment and paymaster sponsorship
+      // Send a batched UserOperation: approve USD + createIssue
       const userOpHash = await bundlerClient.sendUserOperation({
         account: smartAccount as any,
         calls: [
-          // Step 1: Approve mUSD spending
+          // Step 1: Approve USD token spending
           {
-            to: MANTLE_USD_ADDRESS,
+            to: USD_TOKEN_ADDRESS,
             value: BigInt(0),
             data: encodeFunctionData({
-              abi: MANTLE_USD_ABI,
+              abi: USD_TOKEN_ABI,
               functionName: "approve",
               args: [ISSUE_ADDRESS, bountyAmountWei],
             }),
@@ -122,12 +121,12 @@ export const useCreateIssue = () => {
       toast.success("Bounty Created Successfully!", {
         description: (
           <a
-            href={`${MANTLE_SEPOLIA_EXPLORER}${txHash}`}
+            href={`${SEPOLIA_EXPLORER}${txHash}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-500 underline"
           >
-            View Transaction on Mantle Sepolia Explorer
+            View Transaction on Etherscan (Sepolia)
           </a>
         ),
       });
@@ -152,7 +151,6 @@ export const useCreateIssue = () => {
     }
   }, [smartAccount, bundlerClient]);
 
-  // Backward-compatible return values for existing UI components
   const isApprovalPending = state.isPending;
   const isCreateIssuePending = state.isPending;
   const isApprovalConfirming = state.isConfirming;
@@ -166,7 +164,6 @@ export const useCreateIssue = () => {
     isApprovalConfirming,
     isCreateIssueConfirmed,
     isCreateIssueConfirming,
-    // New state properties for advanced use
     ...state,
   };
 };

@@ -11,7 +11,7 @@ import { encodeFunctionData } from "viem";
 import { claimRewardParams } from "@/utils/types";
 import { useSmartAccount } from "@/lib/MetaMaskSmartAccountProvider";
 
-const MANTLE_SEPOLIA_EXPLORER = "https://sepolia.mantlescan.xyz/tx/";
+const SEPOLIA_EXPLORER = "https://sepolia.etherscan.io/tx/";
 
 export interface ClaimState {
   isPending: boolean;
@@ -129,12 +129,12 @@ export const useClaimRewards = (prLink: string) => {
       toast.success("Reward Claimed Successfully!", {
         description: (
           <a
-            href={`${MANTLE_SEPOLIA_EXPLORER}${txHash}`}
+            href={`${SEPOLIA_EXPLORER}${txHash}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-500 underline"
           >
-            View Transaction on Mantle Sepolia Explorer
+            View Transaction on Etherscan (Sepolia)
           </a>
         ),
       });

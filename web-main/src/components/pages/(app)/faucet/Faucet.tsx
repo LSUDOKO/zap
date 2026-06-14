@@ -53,10 +53,10 @@ export default function Faucet() {
         <main className="px-8 py-12 bg-gray-50 space-y-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-4">
-              Mantle USD Faucet
+              USD Faucet (Sepolia)
             </h1>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Get test tokens for development and testing purposes on Mantle Sepolia Testnet.
+              Get test tokens for development and testing purposes on Ethereum Sepolia Testnet.
             </p>
           </div>
 
@@ -70,7 +70,7 @@ export default function Faucet() {
                   height={48}
                   className="object-contain"
                 />
-                <h2 className="text-2xl font-bold text-gray-900">mUSD Token</h2>
+                <h2 className="text-2xl font-bold text-gray-900">USD Token</h2>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -88,7 +88,7 @@ export default function Faucet() {
                     required
                   />
                   <p className="text-sm text-gray-500">
-                    Request test mUSD tokens for development
+                    Request test USD tokens for development
                   </p>
                 </div>
 
@@ -115,8 +115,8 @@ export default function Faucet() {
                     <span className="text-gray-600">Network</span>
                     <div className="flex items-center">
                       <Image
-                        src="/images/Logo/mantle-logo.png"
-                        alt="Mantle"
+                        src="/images/Logo/ethereum-eth-logo.png"
+                        alt="Ethereum"
                         width={50}
                         height={16}
                       />
@@ -132,7 +132,7 @@ export default function Faucet() {
                         height={16}
                         className="mr-1"
                       />
-                      <span className="font-medium text-gray-900">mUSD</span>
+                      <span className="font-medium text-gray-900">USD</span>
                     </div>
                   </div>
                   <div className="flex justify-between items-center text-sm">

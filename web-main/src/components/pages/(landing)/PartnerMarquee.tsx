@@ -3,14 +3,14 @@ import { Marquee } from "@/components/ui/marquee";
 
 const partners = [
   {
-    name: "Mantle",
-    logo: "/images/Logo/mantle-logo.webp",
+    name: "Ethereum",
+    logo: "/images/Logo/ethereum-eth-logo.png",
     width: 120,
     height: 40,
   },
   {
-    name: "Mantle USD",
-    logo: "/images/Logo/mantle-usd-logo.webp",
+    name: "USD Coin",
+    logo: "/images/Logo/ethereum-eth-logo.png",
     width: 40,
     height: 40,
   },

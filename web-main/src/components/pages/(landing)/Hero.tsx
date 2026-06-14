@@ -82,7 +82,7 @@ export default function Hero() {
               The zkPull platform empowers open source contributors to earn
               rewards through validated Pull Requests and bug fixes. Powered by
               Zero-Knowledge Transport Layer Security technology for secure,
-              private, and fair validation on the Mantle blockchain.
+              private, and fair validation on the Ethereum Sepolia testnet.
             </p>
 
             <div className="flex items-center justify-between">
@@ -92,8 +92,8 @@ export default function Hero() {
                     Built on
                   </span>
                   <Image
-                    src="/images/Logo/mantle-logo.png"
-                    alt="Mantle"
+                    src="/images/Logo/ethereum-eth-logo.png"
+                    alt="Ethereum"
                     width={120}
                     height={36}
                     className="opacity-80"

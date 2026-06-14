@@ -2,8 +2,8 @@ import { env } from "@/env";
 
 // CA
 export const ISSUE_ADDRESS = env.NEXT_PUBLIC_ISSUE_ADDRESS as `0x${string}`;
-export const MANTLE_USD_ADDRESS =
-  env.NEXT_PUBLIC_MANTLEUSD_ADDRESS as `0x${string}`;
+export const USD_TOKEN_ADDRESS =
+  env.NEXT_PUBLIC_USD_TOKEN_ADDRESS as `0x${string}`;
 
 // ABI
 export const ISSUE_ABI = [
@@ -416,7 +416,7 @@ export const ISSUE_ABI = [
   },
 ];
 
-export const MANTLE_USD_ABI = [
+export const USD_TOKEN_ABI = [
   { inputs: [], stateMutability: "nonpayable", type: "constructor" },
   {
     inputs: [

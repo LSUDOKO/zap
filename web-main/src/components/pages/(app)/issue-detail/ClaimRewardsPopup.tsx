@@ -82,7 +82,7 @@ export default function ClaimRewardsPopup({
                     <div className="text-left">
                       <p className="text-sm text-gray-600">Reward Per Claim</p>
                       <p className="text-2xl font-bold text-gray-900">
-                        {rewardPerClaim.toFixed(2)} <span className="font-light">mUSD</span>
+                        {rewardPerClaim.toFixed(2)} <span className="font-light">USD</span>
                       </p>
                     </div>
                   </div>
@@ -92,12 +92,11 @@ export default function ClaimRewardsPopup({
                       <span className="text-gray-600">Network</span>
                       <div className="flex items-center">
                         <Image
-                          src="/images/Logo/mantle-logo.png"
-                          alt="Mantle"
-                          width={50}
-                          height={16}
+                          src="/images/Logo/ethereum-eth-logo.png"
+                          alt="Ethereum"
+                          width={20}
+                          height={20}
                         />
-                        {/* <span className="font-medium text-gray-900">Mantle</span> */}
                       </div>
                     </div>
                     <div className="flex justify-between items-center text-sm mt-2">
@@ -110,7 +109,7 @@ export default function ClaimRewardsPopup({
                           height={16}
                           className="mr-1"
                         />
-                        <span className="font-medium text-gray-900">mUSD</span>
+                        <span className="font-medium text-gray-900">USD</span>
                       </div>
                     </div>
                   </div>
