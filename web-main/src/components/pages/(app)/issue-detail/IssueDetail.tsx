@@ -10,6 +10,7 @@ import { useGithubAuth } from "@/lib/hooks/use-github-auth";
 import { useValidationRewards } from "@/lib/hooks/use-validation-rewards";
 import { useClaimRewards } from "@/lib/hooks/use-claim-rewards";
 import { useAdvancedPermissions } from "@/lib/hooks/use-advanced-permissions";
+import { useDelegations } from "@/lib/hooks/use-delegations";
 import { ISSUE_ADDRESS, ISSUE_ABI } from "@/config/const";
 import { useSmartAccount } from "@/lib/MetaMaskSmartAccountProvider";
 import { IssueDetails } from "@/utils/types";
@@ -19,6 +20,7 @@ import GithubAuthSection from "./GithubAuthSection";
 import IssueDescription from "./IssueDescription";
 import HorizontalValidationResults from "./HorizontalValidationResults";
 import GeneratingProofPopup from "./GeneratingProofPopup";
+import DelegateToAVSSection from "./DelegateToAVSSection";
 import TimerIssue from "@/components/TimerIssue";
 
 export default function IssueDetail() {
@@ -75,6 +77,11 @@ export default function IssueDetail() {
 
   const { smartAccount } = useSmartAccount();
 
+  const {
+    createNewDelegation,
+    isPending: isDelegationPending,
+  } = useDelegations();
+
   const isAllValid =
     validationResults.isValidRepo &&
     validationResults.isValidId &&
@@ -87,7 +94,8 @@ export default function IssueDetail() {
     isApprovalPending ||
     isApprovalConfirming ||
     isPermissionRequesting ||
-    isPermissionExecuting;
+    isPermissionExecuting ||
+    isDelegationPending;
 
   const handleClaim = async () => {
     if (usedPRLinksData === true) {
@@ -285,6 +293,17 @@ export default function IssueDetail() {
             isClaimSuccess={isClaimSuccess}
             claimHash={claimHash}
           />
+
+          {/* Task 3.2: Delegate reward distribution to AVS operator */}
+          {smartAccount && (
+            <DelegateToAVSSection
+              smartAccountAddress={smartAccount.address as `0x${string}`}
+              issueId={issueId}
+              issueDetails={issueDetails}
+              createNewDelegation={createNewDelegation}
+              isPending={isDelegationPending}
+            />
+          )}
         </main>
       </div>
       

@@ -8,6 +8,7 @@ import ProfileHeader from "./ProfileHeader";
 import StatsCard from "./StatsCard";
 import AchievementCard from "./AchievementCard";
 import ContributionHistory from "./ContributionHistory";
+import DelegationSection from "@/components/ui/DelegationSection";
 
 const mockAchievements = [
   {
@@ -162,6 +163,11 @@ export default function Profile() {
             <div>
               <ContributionHistory contributions={mockContributions} />
             </div>
+          </div>
+
+          {/* Delegation Management Section (ERC-7710) */}
+          <div className="max-w-2xl mx-auto">
+            <DelegationSection />
           </div>
         </main>
       </div>
