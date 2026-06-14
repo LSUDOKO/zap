@@ -3,22 +3,36 @@ import {
   ISSUE_ABI,
 } from "@/config/const";
 import {
-  useWriteContract,
-  useWaitForTransactionReceipt,
   useReadContract,
 } from "wagmi";
 import { toast } from "sonner";
-import React from "react";
+import React, { useCallback, useState } from "react";
+import { encodeFunctionData } from "viem";
 import { claimRewardParams } from "@/utils/types";
+import { useSmartAccount } from "@/lib/MetaMaskSmartAccountProvider";
 
 const MANTLE_SEPOLIA_EXPLORER = "https://sepolia.mantlescan.xyz/tx/";
 
+export interface ClaimState {
+  isPending: boolean;
+  isConfirming: boolean;
+  isSuccess: boolean;
+  isError: boolean;
+  error: string | null;
+  transactionHash: `0x${string}` | null;
+}
+
 export const useClaimRewards = (prLink: string) => {
-  const {
-    data: claimHash,
-    isPending: isClaimPending,
-    writeContract: writeClaim,
-  } = useWriteContract();
+  const { smartAccount, bundlerClient } = useSmartAccount();
+  
+  const [state, setState] = useState<ClaimState>({
+    isPending: false,
+    isConfirming: false,
+    isSuccess: false,
+    isError: false,
+    error: null,
+    transactionHash: null,
+  });
 
   const { data: usedPRLinksData, isError: isCheckError } = useReadContract({
     address: ISSUE_ADDRESS,
@@ -27,52 +41,7 @@ export const useClaimRewards = (prLink: string) => {
     args: [prLink],
   });
 
-  const { isLoading: isClaimConfirming, isSuccess: isClaimSuccess, isError: isClaimError } =
-    useWaitForTransactionReceipt({
-      hash: claimHash,
-    });
-
-  // Approval is not needed for claiming rewards (the contract sends from escrow, not from user)
-  // These are kept as false for backward compatibility with components that still destructure them
-  const isApprovalPending = false;
-  const isApprovalConfirming = false;
-
-  React.useEffect(() => {
-    if (isClaimConfirming) {
-      toast.loading("Claiming your reward...", {
-        id: "claim-confirming",
-      });
-    }
-  }, [isClaimConfirming]);
-
-  React.useEffect(() => {
-    if (isClaimSuccess) {
-      toast.dismiss("claim-confirming");
-      toast.success("Reward Claimed Successfully!", {
-        description: (
-          <a
-            href={`${MANTLE_SEPOLIA_EXPLORER}${claimHash}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-500 underline"
-          >
-            View Transaction on Mantle Sepolia Explorer
-          </a>
-        ),
-      });
-    }
-  }, [isClaimSuccess, claimHash]);
-
-  React.useEffect(() => {
-    if (isClaimError) {
-      toast.dismiss("claim-confirming");
-      toast.error("Claim Failed", {
-        description: "The transaction was not confirmed. Please try again.",
-      });
-    }
-  }, [isClaimError]);
-
-  const handleClaimRewards = async (params: claimRewardParams) => {
+  const handleClaimRewards = useCallback(async (params: claimRewardParams) => {
     try {
       if (isCheckError) {
         console.error("Error checking PR:", isCheckError);
@@ -87,27 +56,116 @@ export const useClaimRewards = (prLink: string) => {
         return;
       }
 
+      if (!smartAccount || !bundlerClient) {
+        toast.error("Wallet not connected. Please connect your wallet first.");
+        return;
+      }
+
+      setState({
+        isPending: true,
+        isConfirming: false,
+        isSuccess: false,
+        isError: false,
+        error: null,
+        transactionHash: null,
+      });
+
       const accessToken = sessionStorage.getItem("accessToken") || "";
 
-      writeClaim({
-        address: ISSUE_ADDRESS,
-        abi: ISSUE_ABI,
-        functionName: "claimReward",
-        args: [
-          BigInt(params.issueId),
-          params.prLink,
-          params.isMerged,
-          accessToken,
+      toast.loading("Claiming reward via smart account...", {
+        id: "claim-reward",
+      });
+
+      // Send the claimReward call as a UserOperation via the bundler.
+      // With a configured paymaster, this can be gasless (sponsored).
+      // The bundler handles counterfactual deployment if needed.
+      const userOpHash = await bundlerClient.sendUserOperation({
+        account: smartAccount as any,
+        calls: [
+          {
+            to: ISSUE_ADDRESS,
+            value: BigInt(0),
+            data: encodeFunctionData({
+              abi: ISSUE_ABI,
+              functionName: "claimReward",
+              args: [
+                BigInt(params.issueId),
+                params.prLink,
+                params.isMerged,
+                accessToken,
+              ],
+            }),
+          },
         ],
       });
-    } catch (err) {
-      toast.error("Transaction Failed", {
-        description:
-          err instanceof Error ? err.message : "Unexpected error occurred",
+
+      setState(prev => ({
+        ...prev,
+        isPending: false,
+        isConfirming: true,
+      }));
+
+      toast.loading("Waiting for claim confirmation...", {
+        id: "claim-reward",
       });
-      throw err;
+
+      // Wait for the UserOperation to be included in a block
+      const receipt = await bundlerClient.waitForUserOperationReceipt({
+        hash: userOpHash,
+      });
+
+      const txHash = receipt.receipt.transactionHash;
+
+      setState({
+        isPending: false,
+        isConfirming: false,
+        isSuccess: true,
+        isError: false,
+        error: null,
+        transactionHash: txHash,
+      });
+
+      toast.dismiss("claim-reward");
+      toast.success("Reward Claimed Successfully!", {
+        description: (
+          <a
+            href={`${MANTLE_SEPOLIA_EXPLORER}${txHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 underline"
+          >
+            View Transaction on Mantle Sepolia Explorer
+          </a>
+        ),
+      });
+    } catch (err: any) {
+      console.error("Claim failed:", err);
+      
+      const errorMsg = err?.shortMessage || err?.message || "Claim failed";
+      
+      setState({
+        isPending: false,
+        isConfirming: false,
+        isSuccess: false,
+        isError: true,
+        error: errorMsg,
+        transactionHash: null,
+      });
+
+      toast.dismiss("claim-reward");
+      toast.error("Claim Failed", {
+        description: errorMsg,
+      });
     }
-  };
+  }, [smartAccount, bundlerClient, isCheckError, usedPRLinksData]);
+
+  // Backward-compatible return values for existing UI components
+  const isClaimPending = state.isPending;
+  const isClaimConfirming = state.isConfirming;
+  const isClaimSuccess = state.isSuccess;
+  const isApprovalPending = false; // No separate approval step needed
+  const isApprovalConfirming = false;
+  const claimHash = state.transactionHash;
 
   return {
     isClaimPending,
@@ -118,5 +176,7 @@ export const useClaimRewards = (prLink: string) => {
     isApprovalConfirming,
     usedPRLinksData,
     claimHash,
+    // New state for advanced use
+    ...state,
   };
 };

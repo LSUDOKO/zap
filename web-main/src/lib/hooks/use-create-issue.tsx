@@ -4,146 +4,160 @@ import {
   MANTLE_USD_ADDRESS,
   MANTLE_USD_ABI,
 } from "@/config/const";
-import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { CreateIssueParams } from "@/utils/types";
 import { toast } from "sonner";
-import { useEffect, useState } from "react";
-import { ethers } from "ethers";
+import { useCallback, useState } from "react";
+import { parseEther, encodeFunctionData } from "viem";
+import { useSmartAccount } from "@/lib/MetaMaskSmartAccountProvider";
+
+const MANTLE_SEPOLIA_EXPLORER = "https://sepolia.mantlescan.xyz/tx/";
+
+export interface CreateIssueState {
+  isPending: boolean;
+  isConfirming: boolean;
+  isConfirmed: boolean;
+  isError: boolean;
+  error: string | null;
+  transactionHash: `0x${string}` | null;
+}
 
 export const useCreateIssue = () => {
-  const [issueParams, setIssueParams] = useState<CreateIssueParams | null>(null);
-
-  const {
-    data: approvalHash,
-    isPending: isApprovalPending,
-    writeContract: writeApproval,
-  } = useWriteContract();
-
-  const {
-    data: createIssueHash,
-    isPending: isCreateIssuePending,
-    writeContract: writeCreateIssue,
-  } = useWriteContract();
-
-  const {
-    isLoading: isApprovalConfirming,
-    isSuccess: isApprovalSuccess,
-  } = useWaitForTransactionReceipt({
-    hash: approvalHash,
+  const { bundlerClient, smartAccount } = useSmartAccount();
+  
+  const [state, setState] = useState<CreateIssueState>({
+    isPending: false,
+    isConfirming: false,
+    isConfirmed: false,
+    isError: false,
+    error: null,
+    transactionHash: null,
   });
 
-  const {
-    isLoading: isCreateIssueConfirming,
-    isSuccess: isCreateIssueConfirmed,
-    isError: isCreateIssueError,
-  } = useWaitForTransactionReceipt({
-    hash: createIssueHash,
-  });
-
-  // useEffect(() => {
-  //   if (approvalHash) {
-  //     toast.success("Token Approval Transaction Sent", {
-  //       description: (
-  //         <a
-  //           href={`${MANTLE_SEPOLIA_EXPLORER}${approvalHash}`}
-  //           target="_blank"
-  //           rel="noopener noreferrer"
-  //           className="text-blue-500 underline"
-  //         >
-  //           View Transaction on Mantle Sepolia Explorer
-  //         </a>
-  //       ),
-  //     });
-  //   }
-  // }, [approvalHash]);
-
-  useEffect(() => {
-    if (isApprovalConfirming) {
-      toast.loading("Waiting for approval confirmation...", {
-        id: "approval-confirming",
-      });
+  const handleCreateIssue = useCallback(async (params: CreateIssueParams) => {
+    if (!smartAccount || !bundlerClient) {
+      toast.error("Wallet not connected. Please connect your wallet first.");
+      return;
     }
-  }, [isApprovalConfirming]);
 
-  useEffect(() => {
-    if (isApprovalSuccess && issueParams) {
-      toast.dismiss("approval-confirming");
-      toast.success("Token Approved Successfully");
+    setState({
+      isPending: true,
+      isConfirming: false,
+      isConfirmed: false,
+      isError: false,
+      error: null,
+      transactionHash: null,
+    });
 
-      const bountyAmountWei = ethers.parseEther(issueParams.bountyAmount);
-      writeCreateIssue({
-        address: ISSUE_ADDRESS,
-        abi: ISSUE_ABI,
-        functionName: "createIssue",
-        args: [
-          issueParams.githubProjectId,
-          bountyAmountWei,
-          issueParams.projectName,
-          issueParams.description,
-          issueParams.repoLink,
-          issueParams.deadline,
-          issueParams.maxClaims,
+    try {
+      const bountyAmountWei = parseEther(params.bountyAmount);
+      const deadlineTimestamp = BigInt(params.deadline);
+      const maxClaimsBigInt = BigInt(params.maxClaims);
+
+      toast.loading("Creating bounty via smart account...", {
+        id: "create-issue",
+      });
+
+      // Send a batched UserOperation: approve mUSD + createIssue
+      // The bundler handles counterfactual deployment and paymaster sponsorship
+      const userOpHash = await bundlerClient.sendUserOperation({
+        account: smartAccount as any,
+        calls: [
+          // Step 1: Approve mUSD spending
+          {
+            to: MANTLE_USD_ADDRESS,
+            value: BigInt(0),
+            data: encodeFunctionData({
+              abi: MANTLE_USD_ABI,
+              functionName: "approve",
+              args: [ISSUE_ADDRESS, bountyAmountWei],
+            }),
+          },
+          // Step 2: Create the issue
+          {
+            to: ISSUE_ADDRESS,
+            value: BigInt(0),
+            data: encodeFunctionData({
+              abi: ISSUE_ABI,
+              functionName: "createIssue",
+              args: [
+                params.githubProjectId,
+                bountyAmountWei,
+                params.projectName,
+                params.description,
+                params.repoLink,
+                deadlineTimestamp,
+                maxClaimsBigInt,
+              ],
+            }),
+          },
         ],
       });
 
-      setIssueParams(null);
-    }
-  }, [isApprovalSuccess, issueParams, writeCreateIssue]);
+      setState(prev => ({
+        ...prev,
+        isPending: false,
+        isConfirming: true,
+      }));
 
-  // useEffect(() => {
-  //   if (createIssueHash) {
-  //     toast.success("Issue Creation Transaction Sent", {
-  //       description: (
-  //         <a
-  //           href={`${MANTLE_SEPOLIA_EXPLORER}${createIssueHash}`}
-  //           target="_blank"
-  //           rel="noopener noreferrer"
-  //           className="text-blue-500 underline"
-  //         >
-  //           View Transaction on Mantle Sepolia Explorer
-  //         </a>
-  //       ),
-  //     });
-  //   }
-  // }, [createIssueHash]);
-
-  useEffect(() => {
-    if (isCreateIssueConfirming) {
-      toast.loading("Waiting for issue creation confirmation...", {
-        id: "create-issue-confirming",
-      });
-    }
-  }, [isCreateIssueConfirming]);
-
-  useEffect(() => {
-    if (isCreateIssueConfirmed) {
-      toast.dismiss("create-issue-confirming");
-      toast.success("Issue Created Successfully");
-    }
-    if (isCreateIssueError) {
-      toast.dismiss("create-issue-confirming");
-      toast.error("Issue Creation Failed");
-    }
-  }, [isCreateIssueConfirmed, isCreateIssueError]);
-
-  const handleCreateIssue = async (params: CreateIssueParams) => {
-    try {
-      const bountyAmountWei = ethers.parseEther(params.bountyAmount);
-      writeApproval({
-        abi: MANTLE_USD_ABI,
-        address: MANTLE_USD_ADDRESS,
-        functionName: "approve",
-        args: [ISSUE_ADDRESS, bountyAmountWei],
+      toast.loading("Waiting for bounty creation confirmation...", {
+        id: "create-issue",
       });
 
-      setIssueParams(params);
-    } catch (err) {
-      toast.error("Transaction Failed", {
-        description: err instanceof Error ? err.message : "Unexpected error occurred",
+      const receipt = await bundlerClient.waitForUserOperationReceipt({
+        hash: userOpHash,
       });
-      throw err;
+
+      const txHash = receipt.receipt.transactionHash;
+
+      setState({
+        isPending: false,
+        isConfirming: false,
+        isConfirmed: true,
+        isError: false,
+        error: null,
+        transactionHash: txHash,
+      });
+
+      toast.dismiss("create-issue");
+      toast.success("Bounty Created Successfully!", {
+        description: (
+          <a
+            href={`${MANTLE_SEPOLIA_EXPLORER}${txHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 underline"
+          >
+            View Transaction on Mantle Sepolia Explorer
+          </a>
+        ),
+      });
+    } catch (err: any) {
+      console.error("Failed to create bounty:", err);
+      
+      const errorMsg = err?.shortMessage || err?.message || "Failed to create bounty";
+      
+      setState({
+        isPending: false,
+        isConfirming: false,
+        isConfirmed: false,
+        isError: true,
+        error: errorMsg,
+        transactionHash: null,
+      });
+
+      toast.dismiss("create-issue");
+      toast.error("Bounty Creation Failed", {
+        description: errorMsg,
+      });
     }
-  };
+  }, [smartAccount, bundlerClient]);
+
+  // Backward-compatible return values for existing UI components
+  const isApprovalPending = state.isPending;
+  const isCreateIssuePending = state.isPending;
+  const isApprovalConfirming = state.isConfirming;
+  const isCreateIssueConfirmed = state.isConfirmed;
+  const isCreateIssueConfirming = state.isConfirming;
 
   return {
     handleCreateIssue,
@@ -152,5 +166,7 @@ export const useCreateIssue = () => {
     isApprovalConfirming,
     isCreateIssueConfirmed,
     isCreateIssueConfirming,
+    // New state properties for advanced use
+    ...state,
   };
 };

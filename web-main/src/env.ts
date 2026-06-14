@@ -21,6 +21,8 @@ export const env = createEnv({
     NEXT_PUBLIC_ZK_BACKEND_GET_ACCESS_TOKEN: z.string().optional(),
     NEXT_PUBLIC_GITHUB_CLIENT_ID: z.string().optional(),
     NEXT_PUBLIC_MANTLE_RPC_URL: z.string().optional(),
+    NEXT_PUBLIC_BUNDLER_RPC_URL: z.string().optional(),
+    NEXT_PUBLIC_PAYMASTER_RPC_URL: z.string().optional(),
     NEXT_PUBLIC_APP_URL: z.string().optional(),
   },
   /*
@@ -39,6 +41,8 @@ export const env = createEnv({
     NEXT_PUBLIC_ZK_BACKEND_GET_ACCESS_TOKEN: process.env.NEXT_PUBLIC_ZK_BACKEND_GET_ACCESS_TOKEN,
     NEXT_PUBLIC_GITHUB_CLIENT_ID: process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID,
     NEXT_PUBLIC_MANTLE_RPC_URL: process.env.NEXT_PUBLIC_MANTLE_RPC_URL,
+    NEXT_PUBLIC_BUNDLER_RPC_URL: process.env.NEXT_PUBLIC_BUNDLER_RPC_URL,
+    NEXT_PUBLIC_PAYMASTER_RPC_URL: process.env.NEXT_PUBLIC_PAYMASTER_RPC_URL,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   },
 });

@@ -12,7 +12,7 @@ interface ClaimSuccessPopupProps {
   onClose: () => void;
   rewardAmount: string;
   maxClaims: number;
-  claimHash?: string;
+  claimHash?: string | null;
 }
 
 export default function ClaimSuccessPopup({

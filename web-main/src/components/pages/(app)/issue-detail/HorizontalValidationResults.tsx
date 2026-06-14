@@ -23,7 +23,7 @@ interface HorizontalValidationResultsProps {
   rewardAmount?: string;
   maxClaims: number;
   isClaimSuccess?: boolean;
-  claimHash?: string;
+  claimHash?: string | null;
 }
 
 interface HorizontalValidationStepProps {
