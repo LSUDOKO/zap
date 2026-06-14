@@ -80,6 +80,7 @@ export default function IssueDetail() {
   const {
     createNewDelegation,
     isPending: isDelegationPending,
+    lastCreatedDelegation,
   } = useDelegations();
 
   const isAllValid =
@@ -302,6 +303,7 @@ export default function IssueDetail() {
               issueDetails={issueDetails}
               createNewDelegation={createNewDelegation}
               isPending={isDelegationPending}
+              lastCreatedDelegation={lastCreatedDelegation}
             />
           )}
         </main>
