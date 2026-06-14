@@ -1,8 +1,13 @@
 "use client";
 import React, { useState } from "react";
 import { useCreateIssue } from "@/lib/hooks/use-create-issue";
+import { useAdvancedPermissions } from "@/lib/hooks/use-advanced-permissions";
+import { useSmartAccount } from "@/lib/MetaMaskSmartAccountProvider";
 import { useWallet } from "@/lib/hooks/use-wallet";
+import { ISSUE_ADDRESS, ISSUE_ABI, USD_TOKEN_ADDRESS, USD_TOKEN_ABI } from "@/config/const";
+import { parseEther, encodeFunctionData } from "viem";
 import Image from "next/image";
+import { toast } from "sonner";
 import CornerLayout from "./CornerLayout";
 import WalletConnectSection from "./WalletConnectSection";
 import CreateBountyForm from "./CreateBountyForm";
@@ -16,6 +21,15 @@ export default function CreateBounty() {
     isCreateIssueConfirming,
     isApprovalConfirming,
   } = useCreateIssue();
+  const {
+    requestPermissions,
+    executeWithPermissions,
+    checkSupportedPermissions,
+    isRequesting: isPermissionRequesting,
+    isExecuting: isPermissionExecuting,
+    supportedPermissions,
+  } = useAdvancedPermissions();
+  const { smartAccount } = useSmartAccount();
   const { address } = useWallet();
 
   const [formData, setFormData] = useState({
@@ -33,7 +47,9 @@ export default function CreateBounty() {
     isCreateIssuePending ||
     isApprovalPending ||
     isCreateIssueConfirming ||
-    isApprovalConfirming;
+    isApprovalConfirming ||
+    isPermissionRequesting ||
+    isPermissionExecuting;
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -55,11 +71,107 @@ export default function CreateBounty() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    try {
-      const deadlineTimestamp = BigInt(
-        Math.floor(formData.deadline.getTime() / 1000)
-      );
+    
+    const bountyAmountWei = parseEther(formData.bountyAmount);
+    const deadlineTimestamp = BigInt(
+      Math.floor(formData.deadline.getTime() / 1000)
+    );
+    const maxClaimsBigInt = BigInt(formData.maxClaims);
 
+    try {
+      // Step 1: Check if the wallet supports ERC-7715 permissions
+      // If not supported, fall back to the normal UserOperation flow
+      let usePermissionFlow = false;
+      try {
+        const supported = await checkSupportedPermissions();
+        usePermissionFlow = supported.includes("erc20-token-allowance");
+      } catch {
+        // Wallet doesn't support permissions — fall back
+        usePermissionFlow = false;
+      }
+
+      if (usePermissionFlow && smartAccount) {
+        // Step 2: Request an ERC-20 token allowance permission
+        // This grants the smart account permission to spend the bounty amount
+        // on the user's behalf, replacing the need for a separate approve() call.
+        toast.loading("Requesting permission to manage bounty funds...", {
+          id: "permission-bounty",
+        });
+
+        const granted = await requestPermissions([
+          {
+            type: "erc20-token-allowance",
+            data: {
+              tokenAddress: USD_TOKEN_ADDRESS,
+              allowanceAmount: bountyAmountWei.toString(),
+              justification: `Bounty escrow for ${formData.title} — ${formData.bountyAmount} USD`,
+            },
+            isAdjustmentAllowed: false,
+          },
+        ]);
+
+        toast.dismiss("permission-bounty");
+
+        if (granted.length > 0) {
+          // Step 3: Execute approve + createIssue using the permission context
+          // This happens in a single permission-context execution, so the user
+          // doesn't need to sign separate approve + createIssue transactions.
+          const permissionContext = granted[0].context;
+
+          toast.loading("Creating bounty with permission context...", {
+            id: "create-bounty-permission",
+          });
+
+          const result = await executeWithPermissions(permissionContext, [
+            {
+              to: USD_TOKEN_ADDRESS,
+              value: BigInt(0),
+              data: encodeFunctionData({
+                abi: USD_TOKEN_ABI,
+                functionName: "approve",
+                args: [ISSUE_ADDRESS, bountyAmountWei],
+              }),
+            },
+            {
+              to: ISSUE_ADDRESS,
+              value: BigInt(0),
+              data: encodeFunctionData({
+                abi: ISSUE_ABI,
+                functionName: "createIssue",
+                args: [
+                  formData.title,
+                  bountyAmountWei,
+                  formData.title,
+                  formData.description,
+                  formData.repoLink,
+                  deadlineTimestamp,
+                  maxClaimsBigInt,
+                ],
+              }),
+            },
+          ]);
+
+          toast.dismiss("create-bounty-permission");
+
+          if (result) {
+            toast.success("Bounty created with advanced permissions!");
+            // Reset form on success
+            setFormData({
+              title: "",
+              repoLink: "",
+              description: "",
+              deadline: new Date(),
+              bountyAmount: "0",
+              maxClaims: "1",
+            });
+            return;
+          }
+        }
+        // If permission was rejected or execution failed, fall through to normal flow
+        toast.info("Falling back to standard transaction flow...");
+      }
+
+      // Fallback: Normal UserOperation flow (approve + createIssue via bundler)
       await handleCreateIssue({
         githubProjectId: formData.title,
         bountyAmount: formData.bountyAmount,
@@ -67,7 +179,7 @@ export default function CreateBounty() {
         description: formData.description,
         repoLink: formData.repoLink,
         deadline: deadlineTimestamp,
-        maxClaims: BigInt(formData.maxClaims),
+        maxClaims: maxClaimsBigInt,
       });
 
       setFormData({

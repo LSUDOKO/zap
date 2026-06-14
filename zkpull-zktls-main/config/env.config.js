@@ -10,6 +10,12 @@ const config = {
     id: process.env.RECLAIM_ID,
     secret: process.env.RECLAIM_SECRET,
   },
+  oneshot: {
+    apiKey: process.env.ONESHOT_API_KEY,
+    apiSecret: process.env.ONESHOT_API_SECRET,
+    businessId: process.env.ONESHOT_BUSINESS_ID,
+    webhookPublicKey: process.env.ONESHOT_WEBHOOK_PUBLIC_KEY,
+  },
   server: {
     port: parseInt(process.env.PORT, 10) || 5000,
   },
@@ -25,6 +31,10 @@ const validateConfig = () => {
 
   if (!config.reclaim.id || !config.reclaim.secret) {
     warnings.push("Missing Reclaim credentials");
+  }
+
+  if (!config.oneshot.apiKey || !config.oneshot.apiSecret) {
+    warnings.push("Missing 1Shot API credentials");
   }
   
   if (warnings.length > 0) {

@@ -3,11 +3,15 @@ import React from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
+import { toFunctionSelector, encodeFunctionData } from "viem";
 import { useGetIssueById } from "@/lib/hooks/use-get-issue-by-id";
 import { useGenerateProof } from "@/lib/hooks/use-generate-proof";
 import { useGithubAuth } from "@/lib/hooks/use-github-auth";
 import { useValidationRewards } from "@/lib/hooks/use-validation-rewards";
 import { useClaimRewards } from "@/lib/hooks/use-claim-rewards";
+import { useAdvancedPermissions } from "@/lib/hooks/use-advanced-permissions";
+import { ISSUE_ADDRESS, ISSUE_ABI } from "@/config/const";
+import { useSmartAccount } from "@/lib/MetaMaskSmartAccountProvider";
 import { IssueDetails } from "@/utils/types";
 import CornerLayout from "./CornerLayout";
 import IssueHeader from "./IssueHeader";
@@ -61,6 +65,16 @@ export default function IssueDetail() {
     claimHash,
   } = useClaimRewards(pullRequestUrl);
 
+  const {
+    requestPermissions,
+    executeWithPermissions,
+    checkSupportedPermissions,
+    isRequesting: isPermissionRequesting,
+    isExecuting: isPermissionExecuting,
+  } = useAdvancedPermissions();
+
+  const { smartAccount } = useSmartAccount();
+
   const isAllValid =
     validationResults.isValidRepo &&
     validationResults.isValidId &&
@@ -71,16 +85,105 @@ export default function IssueDetail() {
     isClaimPending ||
     isClaimConfirming ||
     isApprovalPending ||
-    isApprovalConfirming;
+    isApprovalConfirming ||
+    isPermissionRequesting ||
+    isPermissionExecuting;
 
-  const handleClaim = () => {
+  const handleClaim = async () => {
     if (usedPRLinksData === true) {
       toast.error("PR already used", {
         description: "This PR has already been claimed.",
       });
       return;
     }
-    if (issueDetails && pullRequestUrl) {
+    if (!issueDetails || !pullRequestUrl) return;
+
+    const accessToken = sessionStorage.getItem("accessToken") || "";
+    const issueIdBigInt = BigInt(issueId);
+
+    try {
+      // Step 1: Check if the wallet supports ERC-7715 function-call permissions
+      let usePermissionFlow = false;
+      try {
+        const supported = await checkSupportedPermissions();
+        usePermissionFlow = supported.includes("function-call");
+      } catch {
+        usePermissionFlow = false;
+      }
+
+      if (usePermissionFlow && smartAccount) {
+        // Step 2: Request a function-call permission for claimReward()
+        // This grants the smart account permission to call claimReward()
+        // on the IssuesClaim contract on the developer's behalf.
+        toast.loading("Requesting permission to claim reward...", {
+          id: "permission-claim",
+        });
+
+        const claimSelector = toFunctionSelector(
+          "claimReward(uint256,string,bool,string)"
+        );
+
+        const granted = await requestPermissions([
+          {
+            type: "function-call",
+            data: {
+              contractAddress: ISSUE_ADDRESS,
+              functionSelector: claimSelector,
+              justification: `Claim reward for ${pullRequestUrl}`,
+            },
+            isAdjustmentAllowed: false,
+          },
+        ]);
+
+        toast.dismiss("permission-claim");
+
+        if (granted.length > 0) {
+          // Step 3: Execute claimReward using the permission context
+          const permissionContext = granted[0].context;
+
+          toast.loading("Claiming reward with permission context...", {
+            id: "claim-permission",
+          });
+
+          const result = await executeWithPermissions(permissionContext, [
+            {
+              to: ISSUE_ADDRESS,
+              value: BigInt(0),
+              data: encodeFunctionData({
+                abi: ISSUE_ABI,
+                functionName: "claimReward",
+                args: [
+                  issueIdBigInt,
+                  pullRequestUrl,
+                  validationResults.isMerged,
+                  accessToken,
+                ],
+              }),
+            },
+          ]);
+
+          toast.dismiss("claim-permission");
+
+          if (result) {
+            toast.success("Reward claimed with advanced permissions!");
+            return;
+          }
+        }
+
+        // Permission rejected or execution failed — fall through to normal flow
+        toast.info("Falling back to standard claim flow...");
+      }
+
+      // Fallback: Normal UserOperation flow
+      handleClaimRewards({
+        issueId,
+        prLink: pullRequestUrl,
+        isMerged: validationResults.isMerged,
+        bountyAmount: issueDetails.bountyAmount?.toString() || "0",
+      });
+    } catch (err: any) {
+      console.error("Error in claim flow:", err);
+      // Fall back to normal flow
       handleClaimRewards({
         issueId,
         prLink: pullRequestUrl,

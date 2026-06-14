@@ -15,6 +15,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@1shotapi/client-sdk": "^1.1.9",
     "@reclaimprotocol/js-sdk": "^2.2.1",
     "@reclaimprotocol/zk-fetch": "^0.8.0",
     "body-parser": "^1.20.3",
