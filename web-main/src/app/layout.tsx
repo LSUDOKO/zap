@@ -6,6 +6,7 @@ import { WagmiProviderWrapper } from "@/lib/WagmiProviderWrapper";
 import { MetaMaskSmartAccountProvider } from "@/lib/MetaMaskSmartAccountProvider";
 import { ThemeProvider } from "@/lib/ThemeProvider";
 import { Toaster } from 'sonner';
+import VeniceChatDialog from "@/components/ui/VeniceChatDialog";
 
 const poppins = Manrope({
   subsets: ["latin"],
@@ -38,7 +39,8 @@ export default function RootLayout({
               <main className="space-y-10 px-5 xl:px-40 2xl:px-80">
                 {children}
               </main>
-              <Toaster position="bottom-right" toastOptions={{ duration: 3000 }}/>
+              <Toaster position="bottom-right" toastOptions={{ duration: 3000 }} />
+              <VeniceChatDialog />
             </ThemeProvider>
           </MetaMaskSmartAccountProvider>
         </WagmiProviderWrapper>

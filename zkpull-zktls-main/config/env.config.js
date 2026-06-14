@@ -19,6 +19,9 @@ const config = {
   server: {
     port: parseInt(process.env.PORT, 10) || 5000,
   },
+  venice: {
+    apiKey: process.env.VENICE_API_KEY,
+  },
 };
 
 // Validate required environment variables
@@ -36,6 +39,9 @@ const validateConfig = () => {
   if (!config.oneshot.apiKey || !config.oneshot.apiSecret) {
     warnings.push("Missing 1Shot API credentials");
   }
+
+  if (!config.venice.apiKey) {
+    warnings.push("Missing Venice AI API key — AI features disabled");
   
   if (warnings.length > 0) {
     console.warn("Configuration warnings:", warnings.join(", "));

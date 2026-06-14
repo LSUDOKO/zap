@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node operator.js",
     "register": "node register.js",
-    "deregister": "node deregister.js"
+    "deregister": "node deregister.js",
+    "sign-delegation": "node delegate-signer.js"
   },
   "keywords": [
     "zkpull",

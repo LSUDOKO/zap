@@ -15,6 +15,7 @@ export const env = createEnv({
     NEXT_PUBLIC_BUNDLER_RPC_URL: z.string().optional(),
     NEXT_PUBLIC_PAYMASTER_RPC_URL: z.string().optional(),
     NEXT_PUBLIC_APP_URL: z.string().optional(),
+    NEXT_PUBLIC_ZK_BACKEND_CHAT: z.string().optional(),
   },
   runtimeEnv: {
     NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID:
@@ -29,5 +30,6 @@ export const env = createEnv({
     NEXT_PUBLIC_BUNDLER_RPC_URL: process.env.NEXT_PUBLIC_BUNDLER_RPC_URL,
     NEXT_PUBLIC_PAYMASTER_RPC_URL: process.env.NEXT_PUBLIC_PAYMASTER_RPC_URL,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    NEXT_PUBLIC_ZK_BACKEND_CHAT: process.env.NEXT_PUBLIC_ZK_BACKEND_CHAT,
   },
 });
