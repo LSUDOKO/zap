@@ -5,7 +5,7 @@
 require("dotenv").config();
 
 const CONFIG = {
-  rpcUrl: process.env.MANTLE_SEPOLIA_RPC_URL,
+  rpcUrl: process.env.SEPOLIA_RPC_URL,
   privateKey: process.env.OPERATOR_PRIVATE_KEY,
   avsAddress: process.env.AVS_CONTRACT_ADDRESS,
   endpoint: process.env.OPERATOR_ENDPOINT || "http://localhost:3000",
@@ -26,7 +26,7 @@ const ERC20_ABI = [
 ];
 
 const REQUIRED_ENV_VARS = [
-  "MANTLE_SEPOLIA_RPC_URL",
+  "SEPOLIA_RPC_URL",
   "OPERATOR_PRIVATE_KEY",
   "AVS_CONTRACT_ADDRESS",
 ];

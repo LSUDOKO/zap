@@ -89,13 +89,13 @@ export default function WalletConnect() {
                     <div className="flex items-center gap-2">
                       <span>{formattedBalance()}</span>
                       <Image
-                        src="/images/Logo/mantle-usd-logo.webp"
-                        alt="mUSD"
+                        src="/images/Logo/ethereum-eth-logo.png"
+                        alt="USD"
                         width={16}
                         height={16}
                         className="object-contain"
                       />
-                      <span>mUSD</span>
+                      <span>USD</span>
                     </div>
                   </Button>
                 </div>

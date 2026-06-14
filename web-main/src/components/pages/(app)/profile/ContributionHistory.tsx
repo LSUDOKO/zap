@@ -44,11 +44,11 @@ export default function ContributionHistory({ contributions }: ContributionHisto
             <div className="text-right">
               <div className="flex items-center space-x-2">
                 <span className="font-semibold text-gray-900">
-                  {contribution.reward} mUSD
+                  {contribution.reward} USD
                 </span>
                 <Image
-                  src="/images/Logo/mantle-usd-logo.webp"
-                  alt="mUSD"
+                  src="/images/Logo/ethereum-eth-logo.png"
+                  alt="USD"
                   width={16}
                   height={16}
                   className="object-contain"

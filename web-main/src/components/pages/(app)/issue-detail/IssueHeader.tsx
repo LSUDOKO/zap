@@ -23,15 +23,15 @@ export default function IssueHeader({ issueDetails }: IssueHeaderProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex items-center gap-4 p-6 bg-white border border-gray-200 rounded-lg">
           <Image
-            src="/images/Logo/mantle-usd-logo.webp"
-            alt="Mantle USD"
+            src="/images/Logo/ethereum-eth-logo.png"
+            alt="ETH"
             width={48}
             height={48}
             className="object-contain"
           />
           <div>
             <p className="font-bold text-2xl text-gray-900">
-              {parseInt(ethers.formatEther(issueDetails.bountyAmount).toString())} mUSD
+              {parseInt(ethers.formatEther(issueDetails.bountyAmount).toString())} USD
             </p>
             <p className="text-sm text-gray-600">Bounty Reward</p>
           </div>

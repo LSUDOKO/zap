@@ -76,10 +76,10 @@ export default function CreateBountyForm({
 
       <div className="space-y-2">
         <div className="flex items-center space-x-2">
-          <Label htmlFor="bountyAmount" className="text-gray-900 font-medium">Reward (mUSD)</Label>
+          <Label htmlFor="bountyAmount" className="text-gray-900 font-medium">Reward (USD)</Label>
           <Image
-            src="/images/Logo/mantle-usd-logo.webp"
-            alt="Mantle USD"
+            src="/images/Logo/ethereum-eth-logo.png"
+            alt="USD Token"
             width={20}
             height={20}
             className="object-contain"

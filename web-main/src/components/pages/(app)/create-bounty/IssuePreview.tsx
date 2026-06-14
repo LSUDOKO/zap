@@ -46,10 +46,10 @@ export default function IssuePreview({ formData, address }: IssuePreviewProps) {
         <div>
           <p className="text-sm text-gray-600">Reward</p>
           <div className="flex items-center space-x-2">
-            <p className="font-medium text-gray-900">{formData.bountyAmount || '0'} mUSD</p>
+            <p className="font-medium text-gray-900">{formData.bountyAmount || '0'} USD</p>
             <Image
-              src="/images/Logo/mantle-usd-logo.webp"
-              alt="Mantle USD"
+              src="/images/Logo/ethereum-eth-logo.png"
+              alt="USD"
               width={16}
               height={16}
               className="object-contain"

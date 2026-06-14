@@ -77,11 +77,11 @@ export default function IssueCard({
             <div className="flex items-center space-x-2">
               <h2 className="font-bold text-xl text-white">
                 {parseInt(ethers.formatEther(issue.bountyAmount).toString())}{" "}
-                mUSD
+                USD
               </h2>
               <Image
-                src="/images/Logo/mantle-usd-logo.webp"
-                alt="Mantle USD"
+                src="/images/Logo/ethereum-eth-logo.png"
+                alt="USD"
                 width={20}
                 height={20}
                 className="object-contain"

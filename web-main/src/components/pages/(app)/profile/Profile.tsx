@@ -36,7 +36,7 @@ const mockAchievements = [
     title: "Community Helper",
     description: "Helped 10 developers with their issues",
     isUnlocked: false,
-    icon: "/images/Logo/mantle-usd-logo.webp"
+    icon: "/images/Logo/ethereum-eth-logo.png"
   }
 ];
 
@@ -117,12 +117,12 @@ export default function Profile() {
             />
             <StatsCard
               title="Total Rewards Earned"
-              value={`${totalRewards} mUSD`}
+              value={`${totalRewards} USD`}
               subtitle="zkTLS verified"
               icon={
                 <Image
-                  src="/images/Logo/mantle-usd-logo.webp"
-                  alt="Mantle USD"
+                  src="/images/Logo/ethereum-eth-logo.png"
+                  alt="USD"
                   width={20}
                   height={20}
                   className="object-contain"
