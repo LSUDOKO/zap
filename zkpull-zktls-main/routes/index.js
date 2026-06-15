@@ -25,6 +25,7 @@ router.get("/", (req, res) => {
         analyzePR: "POST /api/venice/analyze-pr",
         describeBounty: "POST /api/venice/describe-bounty",
         chat: "POST /api/venice/chat",
+        generateImage: "POST /api/venice/generate-image",
         models: "GET /api/venice/models",
       },
     }

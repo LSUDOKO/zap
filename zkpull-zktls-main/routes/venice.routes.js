@@ -31,6 +31,15 @@ router.post("/api/venice/describe-bounty", veniceController.generateBountyDescri
 router.post("/api/venice/chat", veniceController.chat);
 
 /**
+ * @route   POST /api/venice/generate-image
+ * @desc    Generate a preview image for a bounty using Venice AI
+ * @access  Public
+ * @body    { projectName, description?, repoLink? }
+ * @returns { imageBase64, format, seed, generatedAt }
+ */
+router.post("/api/venice/generate-image", veniceController.generateBountyImage);
+
+/**
  * @route   GET /api/venice/models
  * @desc    List available Venice AI models
  * @access  Public

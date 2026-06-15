@@ -90,6 +90,33 @@ class VeniceController {
   }
 
   /**
+   * Generate a preview image for a bounty using Venice AI.
+   */
+  async generateBountyImage(req, res) {
+    try {
+      const { projectName, description, repoLink } = req.body;
+
+      if (!projectName) {
+        return res.status(400).json({ error: "projectName is required" });
+      }
+
+      const result = await veniceService.generateBountyImage({
+        projectName,
+        description: description || "",
+        repoLink: repoLink || "",
+      });
+
+      return res.status(200).json(result);
+    } catch (error) {
+      console.error("Error in generateBountyImage:", error);
+      return res.status(500).json({
+        error: error.message,
+        imageBase64: null,
+      });
+    }
+  }
+
+  /**
    * List available Venice AI models.
    */
   async listModels(req, res) {

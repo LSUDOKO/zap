@@ -268,6 +268,75 @@ Be concise, friendly, and helpful. If you don't know something, say so.`;
   }
 
   /**
+   * Generate a preview image for a bounty using Venice AI.
+   *
+   * Uses the POST /api/v1/image/generate endpoint to create
+   * a visual card based on the project name and description.
+   *
+   * @param {Object} params
+   * @param {string} params.projectName - Name of the project/bounty
+   * @param {string} params.description - Bounty description
+   * @param {string} params.repoLink - Repository link
+   * @returns {Promise<Object>} { imageBase64, format, seed }
+   */
+  async generateBountyImage({ projectName, description, repoLink }) {
+    const prompt = `Create a professional, modern tech banner for a software development bounty. 
+Project: ${projectName || "Open Source Bounty"}
+Description: ${description?.slice(0, 200) || "Software development bounty on zkPull"}
+Repository: ${repoLink || "GitHub"}
+Style: Clean, professional, technology-themed with a dark blue and purple color scheme. 
+Text elements: "${projectName || "Bounty"}" as the main title, "zkPull" as platform branding.
+Make it look like a high-quality GitHub project banner or social media cover image. 
+Include subtle tech/blockchain themed visual elements.
+DO NOT add any visible text overlays in the image itself.`;
+
+    try {
+      const response = await fetch(`${this.baseUrl}/image/generate`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "z-image-turbo",
+          prompt,
+          width: 1024,
+          height: 512,
+          variants: 1,
+          format: "webp",
+          seed: 0,
+          style_preset: "3D Model",
+          safe_mode: true,
+        }),
+        signal: AbortSignal.timeout(30000),
+      });
+
+      if (!response.ok) {
+        const errBody = await response.text();
+        throw new Error(`Venice image API ${response.status}: ${errBody}`);
+      }
+
+      const data = await response.json();
+
+      return {
+        imageBase64: data.images?.[0] || null,
+        format: "webp",
+        seed: data.request?.seed || 0,
+        generatedAt: new Date().toISOString(),
+      };
+    } catch (error) {
+      console.error("Bounty image generation failed:", error.message);
+
+      return {
+        imageBase64: null,
+        format: "webp",
+        error: error.message,
+        generatedAt: new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
    * Get the list of available Venice AI models.
    * @returns {Promise<Array>} List of models
    */
