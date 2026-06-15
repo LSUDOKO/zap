@@ -4,6 +4,7 @@ import { useCreateIssue } from "@/lib/hooks/use-create-issue";
 import { useAdvancedPermissions } from "@/lib/hooks/use-advanced-permissions";
 import { useSmartAccount } from "@/lib/MetaMaskSmartAccountProvider";
 import { useWallet } from "@/lib/hooks/use-wallet";
+import { useVeniceImage } from "@/lib/hooks/use-venice-image";
 import { ISSUE_ADDRESS, ISSUE_ABI, USD_TOKEN_ADDRESS, USD_TOKEN_ABI } from "@/config/const";
 import { parseEther, encodeFunctionData } from "viem";
 import Image from "next/image";
@@ -31,6 +32,13 @@ export default function CreateBounty() {
   } = useAdvancedPermissions();
   const { smartAccount } = useSmartAccount();
   const { address } = useWallet();
+  const {
+    generateImage,
+    isGenerating: isImageGenerating,
+    generatedImage,
+    error: imageError,
+    getDataUrl,
+  } = useVeniceImage();
 
   const [formData, setFormData] = useState({
     title: "",
@@ -59,6 +67,19 @@ export default function CreateBounty() {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleGenerateImage = async () => {
+    if (!formData.title.trim()) {
+      toast.error("Please enter an issue title first");
+      return;
+    }
+
+    await generateImage({
+      projectName: formData.title,
+      description: formData.description || formData.title,
+      repoLink: formData.repoLink,
+    });
   };
 
   const handleDateChange = (date: Date) => {
@@ -235,6 +256,10 @@ export default function CreateBounty() {
               onSubmit={handleSubmit}
               isLoading={isLoading}
               error={error}
+              onGenerateImage={handleGenerateImage}
+              isImageGenerating={isImageGenerating}
+              generatedImageUrl={getDataUrl()}
+              imageError={imageError}
             />
             <IssuePreview formData={formData} address={address!} />
           </div>

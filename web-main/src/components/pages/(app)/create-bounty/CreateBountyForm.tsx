@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { Loader2, Info } from "lucide-react";
+import { Loader2, Sparkles, Info } from "lucide-react";
 import Image from "next/image";
 
 interface FormData {
@@ -23,6 +23,10 @@ interface CreateBountyFormProps {
   onSubmit: (e: React.FormEvent) => Promise<void>;
   isLoading: boolean;
   error: string | null;
+  onGenerateImage?: () => Promise<void>;
+  isImageGenerating?: boolean;
+  generatedImageUrl?: string | null;
+  imageError?: string | null;
 }
 
 export default function CreateBountyForm({
@@ -31,7 +35,11 @@ export default function CreateBountyForm({
   onDateChange,
   onSubmit,
   isLoading,
-  error
+  error,
+  onGenerateImage,
+  isImageGenerating,
+  generatedImageUrl,
+  imageError
 }: CreateBountyFormProps) {
   return (
     <form
@@ -73,6 +81,49 @@ export default function CreateBountyForm({
           className="border-gray-300 min-h-[120px] bg-white text-gray-900"
         />
       </div>
+
+      {onGenerateImage && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label className="text-gray-900 font-medium">Preview Image</Label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onGenerateImage}
+              disabled={isImageGenerating || isLoading}
+              className="border-gray-300 text-gray-700 hover:bg-gray-100 cursor-pointer"
+            >
+              {isImageGenerating ? (
+                <div className="flex items-center space-x-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Generating...</span>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <Sparkles className="h-4 w-4" />
+                  <span>Generate with AI</span>
+                </div>
+              )}
+            </Button>
+          </div>
+
+          {generatedImageUrl && (
+            <div className="relative w-full h-40 rounded-lg overflow-hidden border border-gray-200">
+              <Image
+                src={generatedImageUrl}
+                alt="Bounty preview"
+                fill
+                className="object-cover"
+              />
+            </div>
+          )}
+
+          {imageError && (
+            <p className="text-amber-600 text-xs">{imageError}</p>
+          )}
+        </div>
+      )}
 
       <div className="space-y-2">
         <div className="flex items-center space-x-2">

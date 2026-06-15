@@ -1,7 +1,8 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
+import { getCachedBountyImageUrl } from "@/lib/hooks/use-venice-image";
 import { toast } from "sonner";
 import { toFunctionSelector, encodeFunctionData } from "viem";
 import { useGetIssueById } from "@/lib/hooks/use-get-issue-by-id";
@@ -22,6 +23,16 @@ import HorizontalValidationResults from "./HorizontalValidationResults";
 import GeneratingProofPopup from "./GeneratingProofPopup";
 import DelegateToAVSSection from "./DelegateToAVSSection";
 import TimerIssue from "@/components/TimerIssue";
+
+function hashToGradient(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h1 = Math.abs(hash % 360);
+  const h2 = (h1 + 40) % 360;
+  return `linear-gradient(135deg, hsl(${h1}, 60%, 35%), hsl(${h2}, 55%, 25%))`;
+}
 
 export default function IssueDetail() {
   const params = useParams();
@@ -76,6 +87,15 @@ export default function IssueDetail() {
   } = useAdvancedPermissions();
 
   const { smartAccount } = useSmartAccount();
+
+  const [cachedBannerImageUrl, setCachedBannerImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (issueDetails?.projectName) {
+      const url = getCachedBountyImageUrl(issueDetails.projectName);
+      if (url) setCachedBannerImageUrl(url);
+    }
+  }, [issueDetails?.projectName]);
 
   const {
     createNewDelegation,
@@ -249,6 +269,10 @@ export default function IssueDetail() {
     );
   }
 
+  const bannerGradient = hashToGradient(
+    issueDetails.projectName || `issue-${issueId}`
+  );
+
   return (
     <CornerLayout>
       <div className="bg-white overflow-hidden">
@@ -257,13 +281,20 @@ export default function IssueDetail() {
           <span className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-gray-400 rounded-tr-lg z-10"></span>
           <span className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-gray-400 rounded-bl-lg z-10"></span>
           <span className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-gray-400 rounded-br-lg z-10"></span>
-          <Image
-            src="/images/Background/bg-detail.png"
-            alt="Issue Detail Background"
-            fill
-            className="object-cover"
-            priority
-          />
+          {cachedBannerImageUrl ? (
+            <Image
+              src={cachedBannerImageUrl}
+              alt={issueDetails.projectName}
+              fill
+              className="object-cover"
+              priority
+            />
+          ) : (
+            <div
+              className="absolute inset-0 w-full h-full"
+              style={{ background: bannerGradient }}
+            />
+          )}
         </div>
 
         <main className="px-8 py-12 bg-gray-50 space-y-8">

@@ -1,9 +1,22 @@
+"use client";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { ethers } from "ethers";
 import { Issue } from "@/utils/types";
+import { useMemo, useState, useEffect } from "react";
 import Image from "next/image";
 import { ShineBorder } from "@/components/ui/shine-border";
+import { getCachedBountyImageUrl } from "@/lib/hooks/use-venice-image";
+
+function hashToGradient(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h1 = Math.abs(hash % 360);
+  const h2 = (h1 + 40) % 360;
+  return `linear-gradient(135deg, hsl(${h1}, 60%, 35%), hsl(${h2}, 55%, 25%))`;
+}
 
 interface IssueCardProps {
   issue: Issue;
@@ -16,6 +29,18 @@ export default function IssueCard({
   index,
   isHighestReward,
 }: IssueCardProps) {
+  const [cachedImageUrl, setCachedImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const url = getCachedBountyImageUrl(issue.projectName);
+    if (url) setCachedImageUrl(url);
+  }, [issue.projectName]);
+
+  const gradient = useMemo(
+    () => hashToGradient(issue.projectName || String(issue.id)),
+    [issue.projectName, issue.id]
+  );
+
   const renderIssueStatus = (deadline: bigint) => {
     const deadlineDate = new Date(Number(deadline) * 1000);
     const timeRemaining = formatDistanceToNow(deadlineDate);
@@ -31,14 +56,26 @@ export default function IssueCard({
 
   const cardContent = (
     <>
-      <Image
-        src="/images/Background/bg-zkpull.png"
-        alt="Background"
-        fill
-        className="object-cover w-full h-full"
-        style={{ objectPosition: "center" }}
-      />
-      <div className="absolute inset-0 bg-black/10 backdrop-blur-md"></div>
+      {cachedImageUrl ? (
+        <>
+          <Image
+            src={cachedImageUrl}
+            alt={issue.projectName}
+            fill
+            className="object-cover w-full h-full"
+            priority={index < 4}
+          />
+          <div className="absolute inset-0 bg-black/30"></div>
+        </>
+      ) : (
+        <>
+          <div
+            className="absolute inset-0 w-full h-full"
+            style={{ background: gradient }}
+          />
+          <div className="absolute inset-0 bg-black/10 backdrop-blur-md"></div>
+        </>
+      )}
 
       {isHighestReward && (
         <ShineBorder
